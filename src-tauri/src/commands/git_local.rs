@@ -1,14 +1,23 @@
 use crate::git;
 use crate::git::backend::GitBackend;
 use crate::settings;
+use notify::RecursiveMode;
+use notify_debouncer_full::{new_debouncer, DebounceEventResult};
 use serde_json;
 use std::path::Path;
 use std::sync::Mutex;
-use notify_debouncer_full::{new_debouncer, DebounceEventResult};
-use notify::{RecursiveMode};
 use tauri::Emitter;
 
-pub struct WatcherHandle(pub Mutex<Option<notify_debouncer_full::Debouncer<notify::RecommendedWatcher, notify_debouncer_full::FileIdMap>>>);
+pub struct WatcherHandle(
+    pub  Mutex<
+        Option<
+            notify_debouncer_full::Debouncer<
+                notify::RecommendedWatcher,
+                notify_debouncer_full::FileIdMap,
+            >,
+        >,
+    >,
+);
 
 fn backend() -> Box<dyn GitBackend + Send> {
     git::create_backend()
@@ -58,7 +67,11 @@ pub fn get_log(path: String, limit: u32) -> Result<Vec<git::CommitInfo>, String>
 }
 
 #[tauri::command]
-pub fn start_watching(path: String, app: tauri::AppHandle, state: tauri::State<'_, WatcherHandle>) -> Result<(), String> {
+pub fn start_watching(
+    path: String,
+    app: tauri::AppHandle,
+    state: tauri::State<'_, WatcherHandle>,
+) -> Result<(), String> {
     let mut handle = state.0.lock().map_err(|e| e.to_string())?;
     *handle = None;
 
@@ -71,23 +84,31 @@ pub fn start_watching(path: String, app: tauri::AppHandle, state: tauri::State<'
                 for event in &events {
                     for path in &event.paths {
                         let path_str = path.to_string_lossy();
-                        if path_str.contains("/.git/") || path_str.contains("\\.git\\")
-                            || path_str.contains("/node_modules/") || path_str.contains("\\node_modules\\")
-                            || path_str.contains("/target/") || path_str.contains("\\target\\")
+                        if path_str.contains("/.git/")
+                            || path_str.contains("\\.git\\")
+                            || path_str.contains("/node_modules/")
+                            || path_str.contains("\\node_modules\\")
+                            || path_str.contains("/target/")
+                            || path_str.contains("\\target\\")
                         {
                             continue;
                         }
-                        let _ = app_clone.emit("file-changed", serde_json::json!({
-                            "path": path_str
-                        }));
+                        let _ = app_clone.emit(
+                            "file-changed",
+                            serde_json::json!({
+                                "path": path_str
+                            }),
+                        );
                     }
                 }
             }
         },
-    ).map_err(|e| format!("创建文件监听失败: {}", e))?;
+    )
+    .map_err(|e| format!("创建文件监听失败: {}", e))?;
 
     let watch_path = Path::new(&path).canonicalize().map_err(|e| e.to_string())?;
-    debouncer.watch(&watch_path, RecursiveMode::Recursive)
+    debouncer
+        .watch(&watch_path, RecursiveMode::Recursive)
         .map_err(|e| format!("监听目录失败: {}", e))?;
 
     *handle = Some(debouncer);

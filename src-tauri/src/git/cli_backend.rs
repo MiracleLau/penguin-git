@@ -1,6 +1,6 @@
-use std::process::Command;
-use super::models::{CommitInfo, FileStatus};
 use super::backend::GitBackend;
+use super::models::{CommitInfo, FileStatus};
+use std::process::Command;
 
 pub struct CliBackend {
     git_path: String,
@@ -20,7 +20,11 @@ impl CliBackend {
             .map_err(|e| format!("执行 git 命令失败: {}", e))?;
         if !output.status.success() {
             let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-            return Err(if err.is_empty() { "git 命令执行失败".into() } else { err });
+            return Err(if err.is_empty() {
+                "git 命令执行失败".into()
+            } else {
+                err
+            });
         }
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
@@ -31,8 +35,12 @@ impl GitBackend for CliBackend {
         let output = self.git(&["status", "--porcelain"], path)?;
         let mut files = Vec::new();
         for line in output.lines() {
-            if line.is_empty() { continue; }
-            if line.as_bytes().len() < 3 { continue; }
+            if line.is_empty() {
+                continue;
+            }
+            if line.as_bytes().len() < 3 {
+                continue;
+            }
 
             let xy = &line[..2];
             let file = &line[3..];
@@ -74,20 +82,34 @@ impl GitBackend for CliBackend {
     }
 
     fn stage_files(&self, path: &str, files: &[String]) -> Result<(), String> {
-        if files.is_empty() { return Ok(()); }
+        if files.is_empty() {
+            return Ok(());
+        }
         let mut args = vec!["add", "--"];
-        for f in files { args.push(f); }
+        for f in files {
+            args.push(f);
+        }
         self.git(&args, path).map(|_| ())
     }
 
     fn unstage_files(&self, path: &str, files: &[String]) -> Result<(), String> {
-        if files.is_empty() { return Ok(()); }
+        if files.is_empty() {
+            return Ok(());
+        }
         let mut args = vec!["reset", "HEAD", "--"];
-        for f in files { args.push(f); }
+        for f in files {
+            args.push(f);
+        }
         self.git(&args, path).map(|_| ())
     }
 
-    fn commit_with_identity(&self, path: &str, message: &str, name: &str, email: &str) -> Result<CommitInfo, String> {
+    fn commit_with_identity(
+        &self,
+        path: &str,
+        message: &str,
+        name: &str,
+        email: &str,
+    ) -> Result<CommitInfo, String> {
         self.stage_all(path)?;
 
         let status = self.get_status(path)?;
@@ -95,16 +117,27 @@ impl GitBackend for CliBackend {
             return Err("没有变更可保存".into());
         }
 
-        let output = self.git(&[
-            "-c", &format!("user.name={}", name),
-            "-c", &format!("user.email={}", email),
-            "commit", "-m", message
-        ], path)?;
+        let output = self.git(
+            &[
+                "-c",
+                &format!("user.name={}", name),
+                "-c",
+                &format!("user.email={}", email),
+                "commit",
+                "-m",
+                message,
+            ],
+            path,
+        )?;
 
-        let hash = output.lines().find(|l| l.contains(']'))
+        let hash = output
+            .lines()
+            .find(|l| l.contains(']'))
             .and_then(|l| {
-                l.split(']').next()?
-                    .split_whitespace().last()
+                l.split(']')
+                    .next()?
+                    .split_whitespace()
+                    .last()
                     .map(|s| s.to_string())
             })
             .unwrap_or_default();
@@ -122,16 +155,24 @@ impl GitBackend for CliBackend {
     }
 
     fn get_log(&self, path: &str, limit: u32) -> Result<Vec<CommitInfo>, String> {
-        let output = self.git(&[
-            "log", "--format=%H|%an|%at|%s",
-            &format!("--max-count={}", limit),
-        ], path)?;
+        let output = self.git(
+            &[
+                "log",
+                "--format=%H|%an|%at|%s",
+                &format!("--max-count={}", limit),
+            ],
+            path,
+        )?;
 
         let mut commits = Vec::new();
         for line in output.lines() {
-            if line.is_empty() { continue; }
+            if line.is_empty() {
+                continue;
+            }
             let parts: Vec<&str> = line.splitn(4, '|').collect();
-            if parts.len() < 4 { continue; }
+            if parts.len() < 4 {
+                continue;
+            }
             let hash = parts[0].to_string();
             commits.push(CommitInfo {
                 short_hash: hash.chars().take(7).collect(),
@@ -147,23 +188,33 @@ impl GitBackend for CliBackend {
     fn get_ahead_behind(&self, path: &str) -> Result<(usize, usize), String> {
         let branch = self.git(&["rev-parse", "--abbrev-ref", "HEAD"], path)?;
         let branch = branch.trim();
-        if branch == "HEAD" { return Ok((0, 0)); }
+        if branch == "HEAD" {
+            return Ok((0, 0));
+        }
 
-        let tracking = self.git(&[
-            "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"
-        ], path);
+        let tracking = self.git(
+            &[
+                "rev-parse",
+                "--abbrev-ref",
+                "--symbolic-full-name",
+                "@{upstream}",
+            ],
+            path,
+        );
         let tracking = match tracking {
             Ok(t) => t.trim().to_string(),
             Err(_) => return Ok((0, 0)),
         };
 
-        let ahead = self.git(&[
-            "rev-list", "--count", &format!("{}..{}", tracking, branch)
-        ], path)?;
+        let ahead = self.git(
+            &["rev-list", "--count", &format!("{}..{}", tracking, branch)],
+            path,
+        )?;
 
-        let behind = self.git(&[
-            "rev-list", "--count", &format!("{}..{}", branch, tracking)
-        ], path)?;
+        let behind = self.git(
+            &["rev-list", "--count", &format!("{}..{}", branch, tracking)],
+            path,
+        )?;
 
         Ok((
             ahead.trim().parse().unwrap_or(0),
@@ -177,18 +228,37 @@ impl GitBackend for CliBackend {
         let head = self.git(&["rev-parse", "HEAD"], path)?;
         let target = self.git(&["rev-parse", hash], path)?;
         if head.trim() != target.trim() {
-            return Err(format!("回退校验失败: HEAD={} 目标={}", head.trim(), target.trim()));
+            return Err(format!(
+                "回退校验失败: HEAD={} 目标={}",
+                head.trim(),
+                target.trim()
+            ));
         }
         Ok(())
     }
 
-    fn revert_to_commit(&self, path: &str, hash: &str, message: &str, name: &str, email: &str) -> Result<(), String> {
+    fn revert_to_commit(
+        &self,
+        path: &str,
+        hash: &str,
+        message: &str,
+        name: &str,
+        email: &str,
+    ) -> Result<(), String> {
         self.git(&["read-tree", "--reset", "-u", hash], path)?;
-        self.git(&[
-            "-c", &format!("user.name={}", name),
-            "-c", &format!("user.email={}", email),
-            "commit", "-m", message,
-        ], path).map(|_| ())
+        self.git(
+            &[
+                "-c",
+                &format!("user.name={}", name),
+                "-c",
+                &format!("user.email={}", email),
+                "commit",
+                "-m",
+                message,
+            ],
+            path,
+        )
+        .map(|_| ())
     }
 
     fn discard_changes(&self, path: &str) -> Result<(), String> {

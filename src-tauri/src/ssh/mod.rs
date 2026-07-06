@@ -1,8 +1,8 @@
-use serde::Serialize;
-use std::path::PathBuf;
-use std::fs;
 use rand::rngs::OsRng;
-use ssh_key::{PrivateKey, Algorithm, LineEnding};
+use serde::Serialize;
+use ssh_key::{Algorithm, LineEnding, PrivateKey};
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,9 +13,7 @@ pub struct SshKeyInfo {
 }
 
 pub fn ssh_dir() -> PathBuf {
-    dirs::home_dir()
-        .expect("home dir not found")
-        .join(".ssh")
+    dirs::home_dir().expect("home dir not found").join(".ssh")
 }
 
 pub fn find_existing_key() -> Option<PathBuf> {
@@ -39,13 +37,15 @@ pub fn generate_ed25519_key(comment: &str) -> Result<SshKeyInfo, String> {
         dir.join("id_ed25519")
     };
 
-    let private = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)
+    let private = PrivateKey::random(&mut OsRng, Algorithm::Ed25519).map_err(|e| e.to_string())?;
+
+    let private_openssh = private
+        .to_openssh(LineEnding::LF)
         .map_err(|e| e.to_string())?;
 
-    let private_openssh = private.to_openssh(LineEnding::LF)
-        .map_err(|e| e.to_string())?;
-
-    let public_openssh = private.public_key().to_openssh()
+    let public_openssh = private
+        .public_key()
+        .to_openssh()
         .map_err(|e| e.to_string())?;
 
     // Append comment to public key
@@ -58,7 +58,11 @@ pub fn generate_ed25519_key(comment: &str) -> Result<SshKeyInfo, String> {
     {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&key_path, fs::Permissions::from_mode(0o600)).ok();
-        fs::set_permissions(key_path.with_extension("pub"), fs::Permissions::from_mode(0o644)).ok();
+        fs::set_permissions(
+            key_path.with_extension("pub"),
+            fs::Permissions::from_mode(0o644),
+        )
+        .ok();
     }
 
     Ok(SshKeyInfo {

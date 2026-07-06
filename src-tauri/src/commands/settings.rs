@@ -8,7 +8,11 @@ fn git_global_config(args: &[&str]) -> Result<String, String> {
         .map_err(|e| format!("执行 git 命令失败: {}", e))?;
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        return Err(if err.is_empty() { "git 命令执行失败".into() } else { err });
+        return Err(if err.is_empty() {
+            "git 命令执行失败".into()
+        } else {
+            err
+        });
     }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
@@ -25,7 +29,8 @@ pub fn set_settings(s: settings::AppSettings) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_git_global_config(key: String) -> Option<String> {
-    git_global_config(&["config", "--global", &key]).ok()
+    git_global_config(&["config", "--global", &key])
+        .ok()
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
 }
@@ -37,6 +42,7 @@ pub fn set_git_global_config(key: String, value: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn detect_git_path() -> Option<String> {
-    which::which("git").ok()
+    which::which("git")
+        .ok()
         .map(|p| p.to_string_lossy().to_string())
 }

@@ -11,6 +11,12 @@ import {
 import { useSettingsStore } from "../stores/settingsStore";
 import { useAppStore } from "../stores/appStore";
 import { showSuccess, showDanger } from "../lib/notify";
+import { check } from "@tauri-apps/plugin-updater";
+import { openUrl } from "@tauri-apps/plugin-opener";
+
+declare const __APP_VERSION__: string;
+
+let pendingUpdate: Awaited<ReturnType<typeof check>> | null = null;
 
 const { t, i18n } = useI18n();
 const router = useRouter();
@@ -27,6 +33,11 @@ const newCredPass = ref("");
 const gitBackend = ref("gix");
 const customGitPath = ref("");
 const showSshModal = ref(false);
+const appVersion = __APP_VERSION__;
+const checkingUpdate = ref(false);
+const latestVersion = ref<string | null>(null);
+const showUpdateModal = ref(false);
+const updateResult = ref<"latest" | "available" | null>(null);
 
 onMounted(async () => {
   const s = await getSettings();
@@ -96,6 +107,37 @@ async function handleAddCredential() {
 async function handleRemoveCred(url: string) {
   try { await removeCredential(url); creds.value = await listCredentials(); showSuccess("凭据已删除"); }
   catch (e) { showDanger("删除失败", String(e)); }
+}
+
+async function checkUpdate() {
+  if (checkingUpdate.value) return;
+  checkingUpdate.value = true;
+  try {
+    const update = await check();
+    pendingUpdate = update;
+    if (update) {
+      latestVersion.value = update.version;
+      updateResult.value = "available";
+    } else {
+      updateResult.value = "latest";
+    }
+  } catch {
+    updateResult.value = null;
+  } finally {
+    checkingUpdate.value = false;
+    showUpdateModal.value = true;
+  }
+}
+
+async function installUpdate() {
+  if (!pendingUpdate) return;
+  try {
+    await pendingUpdate.downloadAndInstall();
+    const { relaunch } = await import("@tauri-apps/plugin-process");
+    await relaunch();
+  } catch (e) {
+    showDanger("更新失败", String(e));
+  }
 }
 </script>
 
@@ -191,6 +233,23 @@ async function handleRemoveCred(url: string) {
           <n-button :type="theme === 'system' ? 'primary' : 'default'" @click="setTheme('system')">跟随系统</n-button>
         </n-button-group>
       </n-card>
+
+      <!-- Version & Update -->
+      <div style="text-align: center; padding: 32px 0 16px; opacity: 0.5;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;">
+          <span>v{{ appVersion }}</span>
+          <n-button quaternary size="tiny" style="padding: 2px; min-width: auto;" @click="checkUpdate">
+            <template #icon>
+              <n-icon :class="{ spinning: checkingUpdate }" style="font-size: 14px; display: flex;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/>
+                </svg>
+              </n-icon>
+            </template>
+          </n-button>
+        </div>
+        <div style="font-size: 11px; margin-top: 6px; opacity: 0.7;">Powered By Radiation</div>
+      </div>
     </div>
 
     <!-- SSH confirmation modal -->
@@ -201,6 +260,24 @@ async function handleRemoveCred(url: string) {
       <div style="display: flex; justify-content: flex-end; gap: 6px;">
         <n-button quaternary @click="showSshModal = false">取消</n-button>
         <n-button type="primary" @click="handleRegenKey">确认重新生成</n-button>
+      </div>
+    </n-modal>
+
+    <!-- Update modal -->
+    <n-modal v-model:show="showUpdateModal" preset="card" title="检查更新" style="max-width: 400px;" closable>
+      <div style="text-align: center; padding: 16px 0;">
+        <div style="font-size: 14px; margin-bottom: 8px;">
+          <template v-if="updateResult === 'latest'">已是最新版本 v{{ appVersion }}</template>
+          <template v-else-if="updateResult === 'available'">
+            新版本 v{{ latestVersion }} 可用<br>
+            <span style="font-size: 12px; opacity: 0.5;">当前版本: v{{ appVersion }}</span>
+          </template>
+          <template v-else>检查失败，请检查网络连接</template>
+        </div>
+        <div v-if="updateResult === 'available'" style="display: flex; gap: 8px; justify-content: center;">
+          <n-button type="primary" @click="installUpdate">立即更新</n-button>
+          <n-button quaternary @click="openUrl('https://github.com/MiracleLau/penguin-git/releases/latest')">前往 GitHub</n-button>
+        </div>
       </div>
     </n-modal>
   </div>

@@ -1,7 +1,7 @@
+use crate::config;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::config;
 
 #[tauri::command]
 pub fn is_git_repo(path: String) -> bool {
@@ -44,7 +44,8 @@ pub fn open_project(path: String) -> Result<ProjectInfo, String> {
     if !p.exists() {
         return Err("路径不存在".into());
     }
-    let name = p.file_name()
+    let name = p
+        .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| path.clone());
 
@@ -52,7 +53,9 @@ pub fn open_project(path: String) -> Result<ProjectInfo, String> {
     let (has_remote, remote_url) = if is_git {
         match gix::open(&path) {
             Ok(repo) => {
-                let url = repo.find_remote("origin").ok()
+                let url = repo
+                    .find_remote("origin")
+                    .ok()
                     .and_then(|r| r.url(gix::remote::Direction::Fetch).map(|u| u.to_string()));
                 (url.is_some(), url)
             }
@@ -65,17 +68,29 @@ pub fn open_project(path: String) -> Result<ProjectInfo, String> {
     // Save to recent
     save_recent_project_inner(&path, &name);
 
-    Ok(ProjectInfo { path, name, is_git_repo: is_git, has_remote, remote_url })
+    Ok(ProjectInfo {
+        path,
+        name,
+        is_git_repo: is_git,
+        has_remote,
+        remote_url,
+    })
 }
 
 fn save_recent_project_inner(path: &str, name: &str) {
     let mut projects = get_recent_projects_inner();
     projects.retain(|p| p.path != path);
-    projects.insert(0, RecentProject {
-        path: path.to_string(),
-        name: name.to_string(),
-        last_opened: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64,
-    });
+    projects.insert(
+        0,
+        RecentProject {
+            path: path.to_string(),
+            name: name.to_string(),
+            last_opened: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+        },
+    );
     projects.truncate(20);
     save_recent_list(&projects);
 }

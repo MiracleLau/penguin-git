@@ -1,8 +1,8 @@
+use crate::config;
+use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
+use aes_gcm::{Aes256Gcm, Key, Nonce};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use crate::config;
-use aes_gcm::{Aes256Gcm, Key, Nonce};
-use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -62,7 +62,8 @@ fn load_encrypted() -> Result<Vec<Credential>, String> {
     let (nonce_bytes, ciphertext) = data.split_at(12);
     let nonce = Nonce::from_slice(nonce_bytes);
 
-    let plaintext = cipher.decrypt(nonce, ciphertext)
+    let plaintext = cipher
+        .decrypt(nonce, ciphertext)
         .map_err(|_| "凭据解密失败".to_string())?;
 
     serde_json::from_slice(&plaintext).map_err(|e| e.to_string())
@@ -79,7 +80,8 @@ fn save_encrypted(creds: &[Credential]) -> Result<(), String> {
 
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
     let plaintext = serde_json::to_string(creds).map_err(|e| e.to_string())?;
-    let ciphertext = cipher.encrypt(&nonce, plaintext.as_bytes())
+    let ciphertext = cipher
+        .encrypt(&nonce, plaintext.as_bytes())
         .map_err(|_| "凭据加密失败".to_string())?;
 
     let mut out = nonce.to_vec();
@@ -90,10 +92,13 @@ fn save_encrypted(creds: &[Credential]) -> Result<(), String> {
 pub fn list_credentials() -> Result<Vec<Credential>, String> {
     let creds = load_encrypted()?;
     // Return credentials without password for listing
-    let safe: Vec<Credential> = creds.into_iter().map(|mut c| {
-        c.password = None;
-        c
-    }).collect();
+    let safe: Vec<Credential> = creds
+        .into_iter()
+        .map(|mut c| {
+            c.password = None;
+            c
+        })
+        .collect();
     Ok(safe)
 }
 
@@ -117,6 +122,8 @@ pub fn remove_credential(url: &str) -> Result<(), String> {
 
 #[allow(dead_code)]
 pub fn find_credential(url: &str) -> Option<Credential> {
-    load_encrypted().ok()?.into_iter()
+    load_encrypted()
+        .ok()?
+        .into_iter()
         .find(|c| url.starts_with(&c.url))
 }

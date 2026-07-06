@@ -1,11 +1,11 @@
+use crate::config;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use crate::config;
 
 #[derive(Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
-    pub git_impl: Option<String>,     // "cli" | "gix"
+    pub git_impl: Option<String>, // "cli" | "gix"
     pub git_path: Option<String>,
     pub git_name: Option<String>,
     pub git_email: Option<String>,

@@ -8,7 +8,11 @@ fn git(args: &[&str], cwd: &str) -> Result<String, String> {
         .map_err(|e| format!("执行 git 命令失败: {}", e))?;
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        return Err(if err.is_empty() { "git 命令执行失败".into() } else { err });
+        return Err(if err.is_empty() {
+            "git 命令执行失败".into()
+        } else {
+            err
+        });
     }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
@@ -17,8 +21,12 @@ fn git(args: &[&str], cwd: &str) -> Result<String, String> {
 pub fn add_remote(path: String, name: String, url: String) -> Result<(), String> {
     let existing = git(&["remote", "get-url", &name], &path);
     match existing {
-        Ok(_) => { let _ = git(&["remote", "set-url", &name, &url], &path)?; }
-        Err(_) => { let _ = git(&["remote", "add", &name, &url], &path)?; }
+        Ok(_) => {
+            let _ = git(&["remote", "set-url", &name, &url], &path)?;
+        }
+        Err(_) => {
+            let _ = git(&["remote", "add", &name, &url], &path)?;
+        }
     }
     Ok(())
 }
@@ -45,6 +53,7 @@ pub fn fetch(path: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_remote_url(path: String) -> Option<String> {
-    git(&["remote", "get-url", "origin"], &path).ok()
+    git(&["remote", "get-url", "origin"], &path)
+        .ok()
         .map(|s| s.trim().to_string())
 }

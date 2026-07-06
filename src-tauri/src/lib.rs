@@ -1,15 +1,17 @@
 mod commands;
-mod ssh;
-mod git;
 mod config;
-mod settings;
 mod credentials;
+mod git;
+mod settings;
+mod ssh;
 use commands::git_local::WatcherHandle;
 use std::sync::Mutex;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
