@@ -1,0 +1,164 @@
+{
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Penguin Git",
+      "subtitle": "A simple version management tool",
+      "start": "Get Started"
+    },
+    "gitCheck": {
+      "title": "Check Git",
+      "found": "Git detected, version: {version}",
+      "notFound": "Git not found",
+      "installMac": "Install via Homebrew: brew install git",
+      "installWin": "Download from https://git-scm.com/downloads",
+      "installLinux": "Install via package manager: sudo apt install git",
+      "recheck": "Re-check"
+    },
+    "project": {
+      "title": "Select Project Folder",
+      "selectFolder": "Select Folder",
+      "openProject": "Open Existing Project",
+      "createNew": "Create New Folder",
+      "placeholder": "No folder selected"
+    },
+    "init": {
+      "title": "Initialize Repository",
+      "alreadyRepo": "This folder is already a Git repository",
+      "notRepo": "This folder is not initialized yet",
+      "initButton": "Initialize Repository",
+      "initSuccess": "Repository initialized!",
+      "gitignore": "Choose .gitignore template",
+      "gitignoreHint": "Select project type to auto-generate ignore rules"
+    },
+    "ssh": {
+      "title": "SSH Key",
+      "checking": "Checking existing keys...",
+      "found": "SSH key found",
+      "notFound": "No SSH key found",
+      "generate": "Generate Key",
+      "generating": "Generating...",
+      "generated": "Key generated!",
+      "publicKey": "Public Key",
+      "copy": "Copy Public Key",
+      "copied": "Copied!",
+      "connectionTest": "Connection Test",
+      "detecting": "Detecting...",
+      "accessible": "Accessible",
+      "inaccessible": "Inaccessible",
+      "retest": "Retest"
+    },
+    "remote": {
+      "title": "Configure Remote Repository",
+      "platform": "Select Platform",
+      "url": "Remote SSH URL",
+      "addRemote": "Add Remote",
+      "added": "Remote configured"
+    },
+    "addKey": {
+      "title": "Add SSH Key to {platform}",
+      "instruction": "Public key copied to clipboard. Click the button below to open the SSH settings page:",
+      "openPage": "Open {platform} SSH Settings",
+      "done": "I've added the key"
+    },
+    "testConn": {
+      "title": "Test Connection",
+      "testing": "Testing connection...",
+      "success": "Connection successful!",
+      "fail": "Connection failed. Check if the key was added correctly.",
+      "retry": "Retry",
+      "skip": "Skip"
+    },
+    "done": {
+      "title": "Setup Complete!",
+      "subtitle": "All set. Start managing your project with Penguin Git!",
+      "enter": "Enter App"
+    }
+  },
+  "dashboard": {
+    "changes": "Changes",
+    "history": "History",
+    "settings": "Settings",
+    "toolbar": {
+      "push": "Push",
+      "pull": "Pull",
+      "pushToRemote": "Push to remote",
+      "pullFromRemote": "Pull from remote",
+      "synced": "Synced",
+      "ahead": "{count} ahead",
+      "behind": "{count} behind",
+      "uncommitted": "Uncommitted changes"
+    },
+    "changesView": {
+      "title": "File Changes",
+      "selectAll": "Select All",
+      "stageAll": "Stage All",
+      "saveAll": "Save All",
+      "commitMessage": "Describe this change",
+      "commitMessageRequired": "Please enter a commit message",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "noChanges": "No file changes detected",
+      "changed": "{count} files changed",
+      "newFile": "Added",
+      "modified": "Modified",
+      "deleted": "Deleted",
+      "renamed": "Renamed"
+    },
+    "historyView": {
+      "title": "Version History",
+      "noCommits": "No commits yet",
+      "currentVersion": "Current",
+      "safeRevert": "Safe revert to this version",
+      "hardRevert": "Hard reset to this version",
+      "safeRevertConfirm": "Uncommitted changes will be discarded, then a new commit will be created to restore the state of {hash}. History is preserved, no force push needed.",
+      "hardRevertConfirm": "⚠️ This will permanently discard all commits after {hash}. Uncommitted changes will be lost. Pushed versions require force push.",
+      "revertSuccess": "Reverted to {hash}",
+      "revertFailed": "Revert failed",
+      "confirm": "Confirm Revert",
+      "discardChanges": "Discard uncommitted changes",
+      "discardChangesConfirm": "This will discard all uncommitted file modifications and restore to the committed state. This action cannot be undone."
+    },
+    "settingsView": {
+      "title": "Settings",
+      "language": "Language",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "project": "Project Info",
+      "path": "Project Path",
+      "remote": "Remote Repository",
+      "noRemote": "No remote configured",
+      "ssh": "SSH Key",
+      "viewPublicKey": "View Public Key",
+      "regenerateKey": "Regenerate Key"
+    }
+  },
+  "projectSelect": {
+    "title": "Select Project",
+    "recent": "Recent Projects",
+    "empty": "No recent projects",
+    "openFolder": "Open Folder",
+    "cloneRepo": "Clone Repository",
+    "newProject": "New Project",
+    "or": "or"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "next": "Next",
+    "back": "Back",
+    "done": "Done",
+    "close": "Close",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "skipOnboarding": "Skip Setup",
+    "skipStep": "Skip Step",
+    "justNow": "just now",
+    "minutesAgo": "{n}m ago",
+    "hoursAgo": "{n}h ago",
+    "daysAgo": "{n}d ago"
+  }
+}

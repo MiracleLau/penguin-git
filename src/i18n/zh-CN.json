@@ -1,0 +1,164 @@
+{
+  "onboarding": {
+    "welcome": {
+      "title": "欢迎使用 Penguin Git",
+      "subtitle": "一个简单易用的版本管理工具",
+      "start": "开始使用"
+    },
+    "gitCheck": {
+      "title": "检查 Git",
+      "found": "已检测到 Git，版本：{version}",
+      "notFound": "未检测到 Git",
+      "installMac": "请通过 Homebrew 安装：brew install git",
+      "installWin": "请从 https://git-scm.com/downloads 下载安装",
+      "installLinux": "请使用包管理器安装：sudo apt install git",
+      "recheck": "重新检测"
+    },
+    "project": {
+      "title": "选择项目文件夹",
+      "selectFolder": "选择文件夹",
+      "openProject": "打开已有项目",
+      "createNew": "创建新文件夹",
+      "placeholder": "未选择文件夹"
+    },
+    "init": {
+      "title": "初始化仓库",
+      "alreadyRepo": "该文件夹已是 Git 仓库",
+      "notRepo": "该文件夹尚未初始化",
+      "initButton": "初始化仓库",
+      "initSuccess": "仓库初始化成功！",
+      "gitignore": "选择 .gitignore 模板",
+      "gitignoreHint": "选择项目类型，自动生成忽略规则"
+    },
+    "ssh": {
+      "title": "SSH 密钥",
+      "checking": "检查已有密钥...",
+      "found": "已找到 SSH 密钥",
+      "notFound": "未找到 SSH 密钥",
+      "generate": "生成密钥",
+      "generating": "正在生成...",
+      "generated": "密钥已生成！",
+      "publicKey": "公钥内容",
+      "copy": "复制公钥",
+      "copied": "已复制！",
+      "connectionTest": "连接测试",
+      "detecting": "正在检测...",
+      "accessible": "可访问",
+      "inaccessible": "不可访问",
+      "retest": "重新检测"
+    },
+    "remote": {
+      "title": "配置远程仓库",
+      "platform": "选择平台",
+      "url": "远程仓库 SSH 地址",
+      "addRemote": "添加远程仓库",
+      "added": "远程仓库已配置"
+    },
+    "addKey": {
+      "title": "添加 SSH 密钥到 {platform}",
+      "instruction": "公钥已复制到剪贴板，请点击下方按钮跳转到密钥设置页面添加：",
+      "openPage": "打开 {platform} SSH 设置",
+      "done": "我已添加完成"
+    },
+    "testConn": {
+      "title": "测试连接",
+      "testing": "正在测试连接...",
+      "success": "连接成功！",
+      "fail": "连接失败，请检查密钥是否正确添加",
+      "retry": "重试",
+      "skip": "跳过"
+    },
+    "done": {
+      "title": "设置完成！",
+      "subtitle": "一切就绪，开始使用 Penguin Git 管理你的项目吧",
+      "enter": "进入应用"
+    }
+  },
+  "dashboard": {
+    "changes": "变更",
+    "history": "历史",
+    "settings": "设置",
+    "toolbar": {
+      "push": "上传",
+      "pull": "下载",
+      "pushToRemote": "推送代码到远程",
+      "pullFromRemote": "从远程拉取代码",
+      "synced": "已同步",
+      "ahead": "领先 {count}",
+      "behind": "落后 {count}",
+      "uncommitted": "有未保存的变更"
+    },
+    "changesView": {
+      "title": "文件变更",
+      "selectAll": "全选",
+      "stageAll": "全部暂存",
+      "saveAll": "全部保存",
+      "commitMessage": "描述这次变更",
+      "commitMessageRequired": "请填写变更描述",
+      "save": "保存变更",
+      "saving": "保存中...",
+      "saved": "已保存",
+      "noChanges": "没有检测到文件变更",
+      "changed": "有 {count} 个文件已变更",
+      "newFile": "新增",
+      "modified": "修改",
+      "deleted": "删除",
+      "renamed": "重命名"
+    },
+    "historyView": {
+      "title": "版本历史",
+      "noCommits": "暂无提交记录",
+      "currentVersion": "当前版本",
+      "safeRevert": "安全回退到此版本",
+      "hardRevert": "硬回退到此版本",
+      "safeRevertConfirm": "将先放弃未保存的变更，然后创建一个新提交来回退到 {hash} 的状态。历史记录会保留，无需强制推送。",
+      "hardRevertConfirm": "⚠️ 这将永久丢弃 {hash} 之后的所有提交，且未保存的变更将丢失。已推送到远程的版本需要强制推送。",
+      "revertSuccess": "已回退到 {hash}",
+      "revertFailed": "回退失败",
+      "confirm": "确认回退",
+      "discardChanges": "放弃未保存的变更",
+      "discardChangesConfirm": "将丢弃所有未保存的文件修改，恢复到当前提交的状态。此操作不可撤销。"
+    },
+    "settingsView": {
+      "title": "设置",
+      "language": "语言",
+      "theme": "主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "project": "项目信息",
+      "path": "项目路径",
+      "remote": "远程仓库",
+      "noRemote": "未配置远程仓库",
+      "ssh": "SSH 密钥",
+      "viewPublicKey": "查看公钥",
+      "regenerateKey": "重新生成密钥"
+    }
+  },
+  "projectSelect": {
+    "title": "选择项目",
+    "recent": "最近的项目",
+    "empty": "暂无最近项目",
+    "openFolder": "打开文件夹",
+    "cloneRepo": "克隆仓库",
+    "newProject": "新建项目",
+    "or": "或"
+  },
+  "common": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "next": "下一步",
+    "back": "上一步",
+    "done": "完成",
+    "close": "关闭",
+    "error": "出错了",
+    "retry": "重试",
+    "loading": "加载中...",
+    "skipOnboarding": "跳过引导",
+    "skipStep": "跳过步骤",
+    "justNow": "刚刚",
+    "minutesAgo": "{n}分钟前",
+    "hoursAgo": "{n}小时前",
+    "daysAgo": "{n}天前"
+  }
+}
