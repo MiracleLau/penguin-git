@@ -52,11 +52,11 @@ jobs:
       - run: bun run build
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v2
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Penguin Git ${{ github.ref_name }}"
           releaseDraft: true
-          includeUpdaterJson: true
+          uploadUpdaterJson: true
