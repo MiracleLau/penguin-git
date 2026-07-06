@@ -2,7 +2,7 @@ use crate::git;
 use crate::git::backend::GitBackend;
 use crate::settings;
 use notify::RecursiveMode;
-use notify_debouncer_full::{new_debouncer, DebounceEventResult};
+use notify_debouncer_full::{new_debouncer, DebounceEventResult, RecommendedCache};
 use serde_json;
 use std::path::Path;
 use std::sync::Mutex;
@@ -13,7 +13,7 @@ pub struct WatcherHandle(
         Option<
             notify_debouncer_full::Debouncer<
                 notify::RecommendedWatcher,
-                notify_debouncer_full::FileIdMap,
+                RecommendedCache,
             >,
         >,
     >,
