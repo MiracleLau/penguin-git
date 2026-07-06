@@ -4232,7 +4232,7 @@ dependencies = [
 
 [[package]]
 name = "penguin-git"
-version = "0.1.2"
+version = "0.1.9"
 dependencies = [
  "aes-gcm",
  "arboard",

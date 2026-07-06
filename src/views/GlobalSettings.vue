@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { NCard, NButton, NInput, NModal, NTag, NButtonGroup, NIcon } from "naive-ui";
+import { NCard, NButton, NInput, NModal, NTag, NButtonGroup, NIcon, NProgress } from "naive-ui";
 import {
   getSettings, setSettings, getGitGlobalConfig, setGitGlobalConfig, detectGitPath,
   getPublicKey, copyPublicKey, generateSshKey,
@@ -38,6 +38,13 @@ const checkingUpdate = ref(false);
 const latestVersion = ref<string | null>(null);
 const showUpdateModal = ref(false);
 const updateResult = ref<"latest" | "available" | null>(null);
+const updateStatus = ref<"idle" | "downloading" | "installed">("idle");
+const progressCurrent = ref(0);
+const progressTotal = ref(0);
+const progressPercent = computed(() =>
+  progressTotal.value > 0 ? Math.round(progressCurrent.value / progressTotal.value * 100) : 0
+);
+let downloadCancelled = false;
 
 onMounted(async () => {
   const s = await getSettings();
@@ -112,6 +119,7 @@ async function handleRemoveCred(url: string) {
 async function checkUpdate() {
   if (checkingUpdate.value) return;
   checkingUpdate.value = true;
+  updateStatus.value = "idle";
   try {
     const update = await check();
     pendingUpdate = update;
@@ -121,7 +129,8 @@ async function checkUpdate() {
     } else {
       updateResult.value = "latest";
     }
-  } catch {
+  } catch (e) {
+    console.error("检查更新失败:", e);
     updateResult.value = null;
   } finally {
     checkingUpdate.value = false;
@@ -131,12 +140,43 @@ async function checkUpdate() {
 
 async function installUpdate() {
   if (!pendingUpdate) return;
+  updateStatus.value = "downloading";
+  progressCurrent.value = 0;
+  progressTotal.value = 0;
+  downloadCancelled = false;
   try {
-    await pendingUpdate.downloadAndInstall();
+    await pendingUpdate.download((event) => {
+      switch (event.event) {
+        case 'Started':
+          progressTotal.value = event.data.contentLength;
+          break;
+        case 'Progress':
+          progressCurrent.value += event.data.chunkLength;
+          break;
+      }
+    });
+    updateStatus.value = "installed";
+  } catch (e) {
+    if (!downloadCancelled) {
+      showDanger("下载失败", String(e));
+    }
+    updateStatus.value = "idle";
+  }
+}
+
+function cancelDownload() {
+  downloadCancelled = true;
+  pendingUpdate?.close();
+  showUpdateModal.value = false;
+}
+
+async function handleRelaunch() {
+  try {
+    await pendingUpdate?.install();
     const { relaunch } = await import("@tauri-apps/plugin-process");
     await relaunch();
   } catch (e) {
-    showDanger("更新失败", String(e));
+    showDanger("重启失败", String(e));
   }
 }
 </script>
@@ -264,20 +304,47 @@ async function installUpdate() {
     </n-modal>
 
     <!-- Update modal -->
-    <n-modal v-model:show="showUpdateModal" preset="card" title="检查更新" style="max-width: 400px;" closable>
+    <n-modal v-model:show="showUpdateModal" preset="card" :title="updateStatus === 'downloading' ? '正在下载更新' : updateStatus === 'installed' ? '更新完成' : '检查更新'" style="max-width: 400px;" :closable="updateStatus === 'idle'">
       <div style="text-align: center; padding: 16px 0;">
-        <div style="font-size: 14px; margin-bottom: 8px;">
-          <template v-if="updateResult === 'latest'">已是最新版本 v{{ appVersion }}</template>
-          <template v-else-if="updateResult === 'available'">
+
+        <template v-if="updateResult === 'latest' && updateStatus === 'idle'">
+          <div style="font-size: 14px;">已是最新版本 v{{ appVersion }}</div>
+        </template>
+
+        <template v-else-if="updateResult === 'available' && updateStatus === 'idle'">
+          <div style="font-size: 14px; margin-bottom: 8px;">
             新版本 v{{ latestVersion }} 可用<br>
             <span style="font-size: 12px; opacity: 0.5;">当前版本: v{{ appVersion }}</span>
-          </template>
-          <template v-else>检查失败，请检查网络连接</template>
-        </div>
-        <div v-if="updateResult === 'available'" style="display: flex; gap: 8px; justify-content: center;">
-          <n-button type="primary" @click="installUpdate">立即更新</n-button>
-          <n-button quaternary @click="openUrl('https://github.com/MiracleLau/penguin-git/releases/latest')">前往 GitHub</n-button>
-        </div>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <n-button type="primary" @click="installUpdate">立即更新</n-button>
+            <n-button quaternary @click="openUrl('https://github.com/MiracleLau/penguin-git/releases/latest')">前往 GitHub</n-button>
+          </div>
+        </template>
+
+        <template v-else-if="updateStatus === 'downloading'">
+          <div style="font-size: 14px; margin-bottom: 12px;">正在下载更新...</div>
+          <n-progress type="line" :percentage="progressPercent" :indicator-placement="'inside'" />
+          <div style="font-size: 12px; opacity: 0.5; margin-top: 8px;">
+            {{ (progressCurrent / 1024 / 1024).toFixed(1) }} MB / {{ (progressTotal / 1024 / 1024).toFixed(1) }} MB
+          </div>
+          <div style="margin-top: 12px;">
+            <n-button quaternary size="small" @click="cancelDownload">取消下载</n-button>
+          </div>
+        </template>
+
+        <template v-else-if="updateStatus === 'installed'">
+          <div style="font-size: 14px; margin-bottom: 16px;">更新已下载完成</div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <n-button type="primary" @click="handleRelaunch">立即重启</n-button>
+            <n-button quaternary @click="showUpdateModal = false">稍后</n-button>
+          </div>
+        </template>
+
+        <template v-else-if="updateResult === null && updateStatus === 'idle'">
+          <div style="font-size: 14px;">检查失败</div>
+        </template>
+
       </div>
     </n-modal>
   </div>
