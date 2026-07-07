@@ -29,6 +29,7 @@ pub fn run() {
             commands::ssh::open_platform_ssh_settings,
             commands::ssh::test_ssh_connection,
             commands::project::is_git_repo,
+            commands::project::check_gitignore_exists,
             commands::project::init_repo,
             commands::project::open_project,
             commands::project::get_recent_projects,

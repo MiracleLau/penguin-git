@@ -12,6 +12,7 @@ export const getGitVersion = () => invoke<string | null>("get_git_version");
 // Project
 export const openProject = (path: string) => invoke<ProjectInfo>("open_project", { path });
 export const isGitRepo = (path: string) => invoke<boolean>("is_git_repo", { path });
+export const checkGitignoreExists = (path: string) => invoke<boolean>("check_gitignore_exists", { path });
 export const initRepo = (path: string, gitignore?: string) =>
   invoke<void>("init_repo", { path, gitignore: gitignore || null });
 export const getRecentProjects = () => invoke<RecentProject[]>("get_recent_projects");

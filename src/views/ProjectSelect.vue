@@ -3,11 +3,14 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { open } from "@tauri-apps/plugin-dialog";
-import { getRecentProjects, isGitRepo, initRepo } from "../lib/tauri";
+import { getRecentProjects, isGitRepo, checkGitignoreExists, initRepo } from "../lib/tauri";
 import { useProjectStore } from "../stores/projectStore";
+import { GITIGNORE_TEMPLATES } from "../lib/gitignoreTemplates";
 import type { RecentProject } from "../lib/types";
-import { NButton, NCard, NDivider, NList, NListItem, NEmpty, NSpin, NIcon, NScrollbar, NTooltip, NModal } from "naive-ui";
+import { NButton, NCard, NDivider, NList, NListItem, NEmpty, NSpin, NIcon, NScrollbar, NTooltip, NModal, NCheckbox, NCheckboxGroup, NSpace } from "naive-ui";
 import { FolderOpenOutline, SettingsOutline } from "@vicons/ionicons5";
+
+const TEMPLATE_KEYS = Object.keys(GITIGNORE_TEMPLATES);
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -16,6 +19,8 @@ const loading = ref(true);
 const showInitDialog = ref(false);
 const pendingInitPath = ref("");
 let pendingInitResolve: ((v: boolean) => void) | null = null;
+const showGitignoreSection = ref(false);
+const selectedTemplates = ref<string[]>(["general"]);
 
 onMounted(async () => {
   try {
@@ -53,8 +58,10 @@ async function handleOpenRecent(p: RecentProject) {
   router.replace("/dashboard");
 }
 
-function ensureGitRepo(path: string): Promise<boolean> {
+async function ensureGitRepo(path: string): Promise<boolean> {
   pendingInitPath.value = path;
+  showGitignoreSection.value = !(await checkGitignoreExists(path));
+  selectedTemplates.value = ["general"];
   showInitDialog.value = true;
   return new Promise((resolve) => {
     pendingInitResolve = resolve;
@@ -63,7 +70,14 @@ function ensureGitRepo(path: string): Promise<boolean> {
 
 async function handleInitConfirm() {
   try {
-    await initRepo(pendingInitPath.value);
+    let content: string | undefined;
+    if (showGitignoreSection.value && selectedTemplates.value.length > 0) {
+      content = selectedTemplates.value
+        .map((k) => (GITIGNORE_TEMPLATES as any)[k])
+        .filter(Boolean)
+        .join("\n");
+    }
+    await initRepo(pendingInitPath.value, content || undefined);
     showInitDialog.value = false;
     pendingInitResolve?.(true);
   } catch {
@@ -130,11 +144,20 @@ function formatTime(ts: number) {
     </n-card>
   </div>
 
-    <n-modal v-model:show="showInitDialog" preset="card" title="初始化 Git 仓库" style="max-width: 400px;" closable @close="handleInitCancel" @mask-click="handleInitCancel">
+    <n-modal v-model:show="showInitDialog" preset="card" title="初始化 Git 仓库" style="max-width: 420px;" closable @close="handleInitCancel" @mask-click="handleInitCancel">
       <p style="font-size: 14px; opacity: 0.7; margin-bottom: 16px;">
         所选目录不是 Git 仓库，是否初始化？
       </p>
-      <div style="display: flex; justify-content: flex-end; gap: 6px;">
+      <template v-if="showGitignoreSection">
+        <n-divider />
+        <p style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">{{ t("projectSelect.initGitignore") }}</p>
+        <n-checkbox-group v-model:value="selectedTemplates">
+          <n-space style="flex-wrap: wrap; gap: 8px;">
+            <n-checkbox v-for="key in TEMPLATE_KEYS" :key="key" :value="key" :label="key.toUpperCase()" />
+          </n-space>
+        </n-checkbox-group>
+      </template>
+      <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px;">
         <n-button quaternary @click="handleInitCancel">取消</n-button>
         <n-button type="primary" @click="handleInitConfirm">初始化</n-button>
       </div>

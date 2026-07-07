@@ -142,7 +142,8 @@
     "openFolder": "打开文件夹",
     "cloneRepo": "克隆仓库",
     "newProject": "新建项目",
-    "or": "或"
+    "or": "或",
+    "initGitignore": "生成 .gitignore："
   },
   "common": {
     "cancel": "取消",

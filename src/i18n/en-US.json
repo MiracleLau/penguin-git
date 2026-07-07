@@ -142,7 +142,8 @@
     "openFolder": "Open Folder",
     "cloneRepo": "Clone Repository",
     "newProject": "New Project",
-    "or": "or"
+    "or": "or",
+    "initGitignore": "Generate .gitignore:"
   },
   "common": {
     "cancel": "Cancel",

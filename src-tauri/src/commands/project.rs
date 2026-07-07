@@ -9,9 +9,14 @@ pub fn is_git_repo(path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn init_repo(path: String, gitignore_content: Option<String>) -> Result<(), String> {
+pub fn check_gitignore_exists(path: String) -> bool {
+    Path::new(&path).join(".gitignore").exists()
+}
+
+#[tauri::command]
+pub fn init_repo(path: String, gitignore: Option<String>) -> Result<(), String> {
     gix::init(&path).map_err(|e| format!("初始化仓库失败: {}", e))?;
-    if let Some(content) = gitignore_content {
+    if let Some(content) = gitignore {
         if !content.trim().is_empty() {
             std::fs::write(Path::new(&path).join(".gitignore"), content)
                 .map_err(|e| format!("写入 .gitignore 失败: {}", e))?;

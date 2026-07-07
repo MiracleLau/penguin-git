@@ -6,7 +6,10 @@ import { useProjectStore } from "../../stores/projectStore";
 import { useGitStore } from "../../stores/gitStore";
 import { listen } from "@tauri-apps/api/event";
 import { showSuccess, showDanger } from "../../lib/notify";
+import { parseDiff } from "../../lib/diffParser";
+import DiffView from "../../components/DiffView.vue";
 import { NButton, NInput, NSpin, NTag, NEmpty, NIcon, NList, NListItem, NModal } from "naive-ui";
+import { AddOutline, RemoveOutline } from "@vicons/ionicons5";
 
 const { t } = useI18n();
 const project = useProjectStore();
@@ -16,6 +19,7 @@ const committing = ref(false);
 const showDiffModal = ref(false);
 const diffContent = ref<string | null>(null);
 const diffFile = ref<string | null>(null);
+const diffRows = computed(() => diffContent.value ? parseDiff(diffContent.value) : []);
 
 async function refresh(silent = false) {
   if (!project.currentProject) return;
@@ -71,11 +75,9 @@ async function handleCommit() {
   }
 }
 
-function handleClickFile(file: string, staged: boolean) {
-  loadDiff(file);
+async function handleClickFile(file: string) {
+  await loadDiff(file);
   showDiffModal.value = true;
-  if (staged) handleUnstage([file]);
-  else handleStage(file);
 }
 
 function closeDiff() {
@@ -126,10 +128,13 @@ function statusLabel(s: string) {
           <div v-if="stagedFiles.length > 0">
             <p style="font-size: 12px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 4px 4px;">已暂存</p>
             <n-list>
-              <n-list-item v-for="f in stagedFiles" :key="'s-'+f.path" clickable @click="handleClickFile(f.path, true)">
+              <n-list-item v-for="f in stagedFiles" :key="'s-'+f.path" clickable @click="handleClickFile(f.path)">
                 <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
                   <span style="font-size: 12px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">{{ f.path }}</span>
                   <n-tag size="tiny">{{ statusLabel(f.status) }}</n-tag>
+                  <n-button size="tiny" quaternary circle title="取消暂存" @click.stop="handleUnstage([f.path])">
+                    <template #icon><n-icon><RemoveOutline /></n-icon></template>
+                  </n-button>
                 </div>
               </n-list-item>
             </n-list>
@@ -138,10 +143,13 @@ function statusLabel(s: string) {
           <div v-if="unstagedFiles.length > 0">
             <p style="font-size: 12px; font-weight: 600; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 4px 4px;">未暂存</p>
             <n-list>
-              <n-list-item v-for="f in unstagedFiles" :key="'u-'+f.path" clickable @click="handleClickFile(f.path, false)">
+              <n-list-item v-for="f in unstagedFiles" :key="'u-'+f.path" clickable @click="handleClickFile(f.path)">
                 <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
                   <span style="font-size: 12px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">{{ f.path }}</span>
                   <n-tag size="tiny">{{ statusLabel(f.status) }}</n-tag>
+                  <n-button size="tiny" quaternary circle title="暂存" @click.stop="handleStage(f.path)">
+                    <template #icon><n-icon><AddOutline /></n-icon></template>
+                  </n-button>
                 </div>
               </n-list-item>
             </n-list>
@@ -157,8 +165,8 @@ function statusLabel(s: string) {
     </div>
     </n-spin>
 
-    <n-modal v-model:show="showDiffModal" preset="card" :title="diffFile" style="max-width: 720px;" @close="closeDiff" @mask-click="closeDiff">
-      <pre style="font-size: 12px; overflow-x: auto; max-height: 60vh; overflow-y: auto; line-height: 1.6; padding: 12px; border-radius: 12px; background: rgba(128,128,128,0.06);">{{ diffContent }}</pre>
+    <n-modal v-model:show="showDiffModal" preset="card" :title="diffFile" style="max-width: 960px;" @close="closeDiff" @mask-click="closeDiff">
+      <DiffView :rows="diffRows" />
     </n-modal>
   </div>
 </template>

@@ -74,7 +74,8 @@ impl GitBackend for CliBackend {
     }
 
     fn get_diff(&self, path: &str, file: &str) -> Result<String, String> {
-        self.git(&["diff", "--", file], path)
+        self.git(&["diff", "HEAD", "--", file], path)
+            .or_else(|_| self.git(&["diff", "--cached", "--", file], path))
     }
 
     fn stage_all(&self, path: &str) -> Result<(), String> {

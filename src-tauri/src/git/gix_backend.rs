@@ -56,7 +56,8 @@ impl GitBackend for GixBackend {
     }
 
     fn get_diff(&self, path: &str, file: &str) -> Result<String, String> {
-        cli(&["diff", "--", file], path)
+        cli(&["diff", "HEAD", "--", file], path)
+            .or_else(|_| cli(&["diff", "--cached", "--", file], path))
     }
 
     fn stage_all(&self, path: &str) -> Result<(), String> {
