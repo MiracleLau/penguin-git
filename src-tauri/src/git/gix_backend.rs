@@ -7,7 +7,6 @@ use gix::status::{self, index_worktree::iter::Summary};
 use gix::Repository;
 use gix::diff::blob::unified_diff::{ConsumeBinaryHunk, ContextSize};
 use gix::diff::blob::{Algorithm, Diff, InternedInput};
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
 pub struct GixBackend;
@@ -24,13 +23,21 @@ fn write_file_blob(repo: &Repository, workdir: &Path, rel: &str) -> Result<(Entr
     let full = workdir.join(rel);
     let content = std::fs::read(&full).map_err(|e| format!("读取文件失败 {}: {}", rel, e))?;
     let id = repo.write_blob(&content).map_err(|e| e.to_string())?;
-    let meta = std::fs::metadata(&full).map_err(|e| e.to_string())?;
-    let kind = if meta.permissions().mode() & 0o111 != 0 {
-        EntryKind::BlobExecutable
-    } else {
-        EntryKind::Blob
-    };
+    let kind = is_executable(&full);
     Ok((kind, id.detach()))
+}
+
+fn is_executable(path: &Path) -> EntryKind {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(meta) = std::fs::metadata(path) {
+            if meta.permissions().mode() & 0o111 != 0 {
+                return EntryKind::BlobExecutable;
+            }
+        }
+    }
+    EntryKind::Blob
 }
 
 fn build_tree_from_entries(repo: &Repository, entries: &[(String, EntryKind, gix::hash::ObjectId)]) -> Result<gix::hash::ObjectId, String> {
