@@ -24,9 +24,14 @@ const diffRows = computed(() => diffContent.value ? parseDiff(diffContent.value)
 async function refresh(silent = false) {
   if (!project.currentProject) return;
   if (!silent) { loading.value = true; git.setStatusLoading(true); }
-  const files = await getStatus(project.currentProject.path);
-  git.setStatus(files);
-  if (!silent) { loading.value = false; git.setStatusLoading(false); }
+  try {
+    const files = await getStatus(project.currentProject.path);
+    git.setStatus(files);
+  } catch (e) {
+    if (!silent) showDanger("加载失败", String(e));
+  } finally {
+    if (!silent) { loading.value = false; git.setStatusLoading(false); }
+  }
 }
 
 onMounted(() => {

@@ -8,7 +8,7 @@ pub struct CliBackend {
 
 impl CliBackend {
     pub fn new(git_path: Option<String>) -> Self {
-        let path = git_path.unwrap_or_else(|| "git".to_string());
+        let path = git_path.unwrap_or_else(|| super::resolve_git_path());
         Self { git_path: path }
     }
 

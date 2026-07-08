@@ -14,5 +14,16 @@ pub fn create_backend() -> Box<dyn GitBackend + Send> {
     }
 }
 
+pub fn resolve_git_path() -> String {
+    let s = settings::load();
+    if let Some(p) = s.git_path {
+        return p;
+    }
+    if let Ok(p) = which::which("git") {
+        return p.to_string_lossy().to_string();
+    }
+    "git".to_string()
+}
+
 // Re-export types for commands
 pub use models::{CommitInfo, FileStatus};

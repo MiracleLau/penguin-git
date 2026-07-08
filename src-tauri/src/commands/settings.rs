@@ -1,8 +1,12 @@
 use crate::settings;
 use std::process::Command;
 
+fn git_path() -> String {
+    crate::git::resolve_git_path()
+}
+
 fn git_global_config(args: &[&str]) -> Result<String, String> {
-    let output = Command::new("git")
+    let output = Command::new(git_path())
         .args(args)
         .output()
         .map_err(|e| format!("执行 git 命令失败: {}", e))?;

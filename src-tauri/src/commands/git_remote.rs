@@ -1,7 +1,11 @@
 use std::process::Command;
 
+fn git_path() -> String {
+    crate::git::resolve_git_path()
+}
+
 fn git(args: &[&str], cwd: &str) -> Result<String, String> {
-    let output = Command::new("git")
+    let output = Command::new(git_path())
         .args(args)
         .current_dir(cwd)
         .output()

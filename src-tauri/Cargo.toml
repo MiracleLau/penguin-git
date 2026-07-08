@@ -1,6 +1,6 @@
 [package]
 name = "penguin-git"
-version = "0.3.1"
+version = "0.3.3"
 description = "A friendly Git version management tool for beginners"
 authors = ["you"]
 edition = "2021"
@@ -22,7 +22,7 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-store = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-gix = { version = "0.85", features = ["serde"] }
+gix = { version = "0.85", features = ["serde", "tree-editor"] }
 ssh-key = { version = "0.6", features = ["ed25519"] }
 rand = { version = "0.8", features = ["getrandom"] }
 open = "5"
